@@ -1,7 +1,6 @@
 package com.bjut.community.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Repository;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -34,8 +33,8 @@ public class AlphaController {
             @RequestParam(name = "current", required = false, defaultValue = "1") int current,
             @RequestParam(name = "limit", required = false, defaultValue = "123") int limit
     ) {
-        System.out.println(current);
-        System.out.println(limit);
+//        System.out.println(current);
+//        System.out.println(limit);
         return "some student";
     }
 
@@ -43,8 +42,8 @@ public class AlphaController {
     @RequestMapping(path = "/student", method = RequestMethod.POST)
     @ResponseBody
     public String saveStudent(String name, int age) {
-        System.out.println(name);
-        System.out.println(age);
+//        System.out.println(name);
+//        System.out.println(age);
         return "success";
     }
 
