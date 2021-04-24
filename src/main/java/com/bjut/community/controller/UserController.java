@@ -58,6 +58,7 @@ public class UserController {
             return "/site/setting";
         }
         String fileName = headerImage.getOriginalFilename();
+        assert fileName != null;
         String suffix = fileName.substring(fileName.lastIndexOf("."));
         if (StringUtils.isNullOrEmpty(suffix)) {
             model.addAttribute("error", "文件格式不正确");
@@ -85,14 +86,14 @@ public class UserController {
         String suffix = fileName.substring(fileName.lastIndexOf("."));
         response.setContentType("image/" + suffix);
 
-        FileInputStream fis = null;
-        OutputStream os = null;
+        FileInputStream fis;
+        OutputStream os;
         try {
             fis = new FileInputStream(fileName);
             os = response.getOutputStream();
 
             byte[] buffer = new byte[1024];
-            int b = 0;
+            int b;
             while ((b = fis.read(buffer)) != -1) {
                 os.write(buffer, 0, b);
             }
@@ -114,6 +115,6 @@ public class UserController {
             model.addAttribute("error", "原密码错误");
             return "site/setting";
         }
-        return "redirect:/index";
+        return "redirect:/logout";
     }
 }
