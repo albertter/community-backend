@@ -7,5 +7,7 @@ public interface CommunityConstant {
     int DEFAULT_EXPIRED_SUCCESS = 3600 * 12; //默认状态登录凭证超时时间
     int REMEMBER_EXPIRED_SUCCESS = 3600 * 12 * 100; // 记住状态登录凭证超时时间
 
+    int ENTITY_TYPE_POST = 1;
+    int ENTITY_TYPE_COMMENT = 2;
 
 }
