@@ -89,7 +89,7 @@ public class MessageController {
 
     }
 
-    private User getLetterTarget(String conversationId) {
+    public User getLetterTarget(String conversationId) {
         String[] ids = conversationId.split("_");
         int id0 = Integer.parseInt(ids[0]);
         int id1 = Integer.parseInt(ids[1]);
@@ -101,7 +101,7 @@ public class MessageController {
         }
     }
 
-    private List<Integer> getLetterIds(List<Message> letterList) {
+    public List<Integer> getLetterIds(List<Message> letterList) {
         List<Integer> ids = new ArrayList<>();
         if (letterList != null) {
             for (Message letter : letterList) {

@@ -14,33 +14,25 @@ import java.io.PrintWriter;
 
 @ControllerAdvice(annotations = Controller.class)
 public class ExceptionAdvice {
+
     private static final Logger logger = LoggerFactory.getLogger(ExceptionAdvice.class);
 
     @ExceptionHandler({Exception.class})
-    public void handleException(Exception e, HttpServletRequest request, HttpServletResponse response) {
-
+    public void handleException(Exception e, HttpServletRequest request, HttpServletResponse response) throws IOException {
         logger.error("服务器发生异常: " + e.getMessage());
         for (StackTraceElement element : e.getStackTrace()) {
             logger.error(element.toString());
-
         }
+
         String xRequestedWith = request.getHeader("x-requested-with");
         if ("XMLHttpRequest".equals(xRequestedWith)) {
             response.setContentType("application/plain;charset=utf-8");
-            PrintWriter writer = null;
-            try {
-                writer = response.getWriter();
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-            assert writer != null;
+            PrintWriter writer = response.getWriter();
             writer.write(CommunityUtil.getJSONString(1, "服务器异常!"));
         } else {
-            try {
-                response.sendRedirect(request.getContextPath() + "/error");
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
+            response.sendRedirect(request.getContextPath() + "/error");
+            return;
         }
     }
+
 }
