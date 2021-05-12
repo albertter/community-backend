@@ -1,8 +1,10 @@
 package com.bjut.community.controller;
 
 import com.bjut.community.annotation.LoginRequired;
+import com.bjut.community.entity.Event;
 import com.bjut.community.entity.Page;
 import com.bjut.community.entity.User;
+import com.bjut.community.event.EventProducer;
 import com.bjut.community.service.FollowService;
 import com.bjut.community.service.UserService;
 import com.bjut.community.util.CommunityConstant;
@@ -31,6 +33,8 @@ public class FollowController implements CommunityConstant {
 
     @Autowired
     private HostHolder hostHolder;
+    @Autowired
+    private EventProducer eventProducer;
 
     @LoginRequired
     @RequestMapping(path = "/follow", method = RequestMethod.POST)
@@ -39,6 +43,16 @@ public class FollowController implements CommunityConstant {
         User user = hostHolder.getUser();
         //关注
         followService.follow(user.getId(), entityType, entityId);
+
+        // 触发事件
+        Event event = new Event()
+                .setTopic(TOPIC_FOLLOW)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityId(entityId)
+                .setEntityType(entityType)
+                .setEntityUserId(entityId);
+        eventProducer.fireEvent(event);
+
         return CommunityUtil.getJSONString(0, "关注成功");
     }
 
