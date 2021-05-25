@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 
 @Component
 public class LoginRequiredInterceptor implements HandlerInterceptor {
+
     @Autowired
     private HostHolder hostHolder;
 

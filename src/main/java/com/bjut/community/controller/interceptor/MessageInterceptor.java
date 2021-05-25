@@ -14,13 +14,11 @@ import javax.servlet.http.HttpServletResponse;
 @Component
 public class MessageInterceptor implements HandlerInterceptor {
 
-
     @Autowired
     private HostHolder hostHolder;
 
     @Autowired
     private MessageService messageService;
-
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
@@ -28,9 +26,7 @@ public class MessageInterceptor implements HandlerInterceptor {
         if (user != null && modelAndView != null) {
             int letterUnreadCount = messageService.findLettersUnreadCount(user.getId(), null);
             int noticeUnreadCount = messageService.findNoticeUnreadCount(user.getId(), null);
-
             modelAndView.addObject("allUnreadCount", letterUnreadCount + noticeUnreadCount);
-
         }
     }
 }
