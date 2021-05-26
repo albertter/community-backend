@@ -1,5 +1,6 @@
 package com.bjut.community.config;
 
+import com.bjut.community.controller.interceptor.DataInterceptor;
 import com.bjut.community.controller.interceptor.LoginTicketInterceptor;
 import com.bjut.community.controller.interceptor.MessageInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
 //    private LoginRequiredInterceptor loginRequiredInterceptor;
     @Autowired
     private MessageInterceptor messageInterceptor;
+    @Autowired
+    private DataInterceptor dataInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -24,6 +27,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
 //        registry.addInterceptor(loginRequiredInterceptor)
 //                .excludePathPatterns("/*/*.css", "/*/*.js", "/*/*.jpg", "/*/*.png", "/*/*.jpeg");
         registry.addInterceptor(messageInterceptor)
+                .excludePathPatterns("/*/*.css", "/*/*.js", "/*/*.jpg", "/*/*.png", "/*/*.jpeg");
+        registry.addInterceptor(dataInterceptor)
                 .excludePathPatterns("/*/*.css", "/*/*.js", "/*/*.jpg", "/*/*.png", "/*/*.jpeg");
     }
 
