@@ -1,14 +1,14 @@
 package com.bjut.community.controller;
 
-import com.bjut.community.annotation.LoginRequired;
+
 import com.bjut.community.entity.User;
 import com.bjut.community.service.FollowService;
 import com.bjut.community.service.LikeService;
 import com.bjut.community.service.UserService;
 import com.bjut.community.util.CommunityConstant;
 import com.bjut.community.util.CommunityUtil;
-import com.bjut.community.util.HostHolder;
 import com.mysql.cj.util.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,20 +44,20 @@ public class UserController implements CommunityConstant {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private HostHolder hostHolder;
+    //    @Autowired
+//    private HostHolder hostHolder;
     @Autowired
     private LikeService likeService;
     @Autowired
     private FollowService followService;
 
-    @LoginRequired
+    //    @LoginRequired
     @RequestMapping(path = "/setting", method = RequestMethod.GET)
     public String getSettingPage() {
         return "/site/setting";
     }
 
-    @LoginRequired
+    //    @LoginRequired
     @RequestMapping(path = "/upload", method = RequestMethod.POST)
     public String uploadHeader(MultipartFile headerImage, Model model) {
         if (headerImage == null) {
@@ -80,7 +80,7 @@ public class UserController implements CommunityConstant {
             logger.error("上传文件失败" + e.getMessage());
             throw new RuntimeException(e);
         }
-        User user = hostHolder.getUser();
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
         String headerUrl = domainPath + contextPath + "/user/header/" + fileName;
         userService.updateHeader(user.getId(), headerUrl);
 
@@ -114,10 +114,10 @@ public class UserController implements CommunityConstant {
 
     }
 
-    @LoginRequired
+    //    @LoginRequired
     @RequestMapping(path = "/update", method = RequestMethod.POST)
     public String updatePassword(Model model, String oldPassword, String newPassword) {
-        User user = hostHolder.getUser();
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
         if (userService.updatePassword(user, oldPassword, newPassword) == 0) {
             model.addAttribute("error", "原密码错误");
             return "site/setting";
@@ -127,6 +127,7 @@ public class UserController implements CommunityConstant {
 
     @RequestMapping(path = "/profile/{userId}", method = RequestMethod.GET)
     public String updatePassword(@PathVariable("userId") int userId, Model model) {
+        User loginUser = (User) SecurityUtils.getSubject().getPrincipal();
         User user = userService.findUserById(userId);
         if (user == null) {
             throw new RuntimeException("该用户不存在");
@@ -143,8 +144,8 @@ public class UserController implements CommunityConstant {
         model.addAttribute("followerCount", followerCount);
         //当前用户是否关注该用户
         boolean hasFollowed = false;
-        if (hostHolder.getUser() != null) {
-            hasFollowed = followService.hasFollowed(hostHolder.getUser().getId(), ENTITY_TYPE_USER, userId);
+        if (loginUser != null) {
+            hasFollowed = followService.hasFollowed(loginUser.getId(), ENTITY_TYPE_USER, userId);
         }
         model.addAttribute("hasFollowed", hasFollowed);
 

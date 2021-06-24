@@ -31,7 +31,6 @@
         where status != 2
           and from_id != 1
           and conversation_id = #{conversationId}
-
         order by id desc
         limit #{offset},#{limit}
     </select>

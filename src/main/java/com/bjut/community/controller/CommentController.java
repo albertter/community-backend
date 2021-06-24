@@ -3,12 +3,13 @@ package com.bjut.community.controller;
 import com.bjut.community.entity.Comment;
 import com.bjut.community.entity.DiscussPost;
 import com.bjut.community.entity.Event;
+import com.bjut.community.entity.User;
 import com.bjut.community.event.EventProducer;
 import com.bjut.community.service.CommentService;
 import com.bjut.community.service.DiscussPostService;
 import com.bjut.community.service.UserService;
 import com.bjut.community.util.CommunityConstant;
-import com.bjut.community.util.HostHolder;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,8 +23,8 @@ import java.util.Date;
 public class CommentController implements CommunityConstant {
     @Autowired
     private DiscussPostService discussPostService;
-    @Autowired
-    private HostHolder hostHolder;
+    //    @Autowired
+//    private HostHolder hostHolder;
     @Autowired
     private UserService userService;
     @Autowired
@@ -33,8 +34,8 @@ public class CommentController implements CommunityConstant {
 
     @RequestMapping(path = "/add/{discussPostId}", method = RequestMethod.POST)
     public String getDiscussPost(@PathVariable("discussPostId") int discussPostId, Comment comment) {
-
-        comment.setUserId(hostHolder.getUser().getId());
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
+        comment.setUserId(user.getId());
         comment.setStatus(0);
         comment.setCreateTime(new Date());
         commentService.addComment(comment);
@@ -42,7 +43,7 @@ public class CommentController implements CommunityConstant {
         // 触发事件
         Event event = new Event()
                 .setTopic(TOPIC_COMMENT)
-                .setUserId(hostHolder.getUser().getId())
+                .setUserId(user.getId())
                 .setEntityId(comment.getEntityId())
                 .setEntityType(comment.getEntityType())
                 .setData("postId", discussPostId);

@@ -60,20 +60,21 @@ public class FollowService implements CommunityConstant {
         return redisTemplate.opsForZSet().zCard(followeeKey);
     }
 
-    //\
+    //
     public long findFollowerCount(int entityType, int entityId) {
         String followerKey = RedisKeyUtil.getFollowerKey(entityType, entityId);
-        return redisTemplate.opsForZSet().zCard(followerKey);
+        return redisTemplate.opsForZSet().zCard(followerKey); //  获取变量中元素的个数。
     }
 
     public boolean hasFollowed(int userId, int entityType, int entityId) {
         String followeeKey = RedisKeyUtil.getFolloweeKey(userId, entityType);
-        return redisTemplate.opsForZSet().score(followeeKey, entityId) != null;
+        return redisTemplate.opsForZSet().score(followeeKey, entityId) != null; //获取元素的分值。
     }
 
     // 查询某用户关注的人
     public List<Map<String, Object>> findFollowees(int userId, int offset, int limit) {
         String followeeKey = RedisKeyUtil.getFolloweeKey(userId, ENTITY_TYPE_USER);
+        //索引倒序排列指定区间元素。
         Set<Integer> targetIds = redisTemplate.opsForZSet().reverseRange(followeeKey, offset, offset + limit - 1);
 
         if (targetIds == null) {

@@ -7,6 +7,7 @@ import com.bjut.community.service.DiscussPostService;
 import com.bjut.community.service.LikeService;
 import com.bjut.community.service.UserService;
 import com.bjut.community.util.CommunityConstant;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -45,8 +46,12 @@ public class HomeController implements CommunityConstant {
             }
 
         }
-//        System.out.println(discussPosts);
         model.addAttribute("discussPosts", discussPosts);
+
+//        User user = (User) SecurityUtils.getSubject().getPrincipal();
+//        if (user != null) {
+//            model.addAttribute("loginUser", user);
+//        }
         return "/index";
     }
 

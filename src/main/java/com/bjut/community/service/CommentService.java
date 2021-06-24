@@ -30,7 +30,7 @@ public class CommentService implements CommunityConstant {
         return commentMapper.selectCommentById(id);
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
+//    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED) // 添加评论事务
     public int addComment(Comment comment) {
         if (comment == null) {
             throw new IllegalArgumentException("参数不能为空");

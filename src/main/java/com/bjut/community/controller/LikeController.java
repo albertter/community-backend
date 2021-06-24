@@ -8,6 +8,7 @@ import com.bjut.community.service.LikeService;
 import com.bjut.community.util.CommunityConstant;
 import com.bjut.community.util.CommunityUtil;
 import com.bjut.community.util.HostHolder;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,8 +28,8 @@ public class LikeController implements CommunityConstant {
 
     @Autowired
     private DiscussPostService discussPostService;
-    @Autowired
-    private HostHolder hostHolder;
+//    @Autowired
+//    private HostHolder hostHolder;
 
     @Autowired
     private EventProducer eventProducer;
@@ -36,7 +37,7 @@ public class LikeController implements CommunityConstant {
     @RequestMapping(path = "/like", method = RequestMethod.POST)
     @ResponseBody
     public String like(int entityType, int entityId, int entityUserId, int postId) {
-        User user = hostHolder.getUser();
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
         //点赞
         likeService.like(user.getId(), entityType, entityId, entityUserId);
         //获取数量
@@ -51,7 +52,7 @@ public class LikeController implements CommunityConstant {
         if (likeStatus == 1) {
             Event event = new Event()
                     .setTopic(TOPIC_LIKE)
-                    .setUserId(hostHolder.getUser().getId())
+                    .setUserId(user.getId())
                     .setEntityId(entityId)
                     .setEntityType(entityType)
                     .setEntityUserId(entityUserId)

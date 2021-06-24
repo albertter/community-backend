@@ -3,12 +3,17 @@ package com.bjut.community.controller;
 import com.bjut.community.entity.User;
 import com.bjut.community.service.UserService;
 import com.bjut.community.util.CommunityConstant;
+import com.bjut.community.util.CommunityUtil;
 import com.wf.captcha.SpecCaptcha;
 import com.wf.captcha.base.Captcha;
 import com.wf.captcha.utils.CaptchaUtil;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.UnknownAccountException;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -16,9 +21,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
 import java.util.Map;
 
 @Controller
@@ -39,37 +44,46 @@ public class LoginController implements CommunityConstant {
     public String login(Model model, String username, String password, String code,
                         boolean rememberme, HttpServletRequest request, HttpServletResponse response) {
 
-//        String kaptcha = (String) session.getAttribute("kaptcha");
-//        if (StringUtils.isNullOrEmpty(kaptcha) || StringUtils.isNullOrEmpty(code) || !kaptcha.equals(code)) {
-//            model.addAttribute("kaptchaMsg", "验证码不正确");
-//            return "/site/login";
-//        }
-        if (!CaptchaUtil.ver(code, request)) {
-            CaptchaUtil.clear(request);
-            model.addAttribute("kaptchaMsg", "验证码不正确");
-            return "/site/login";
+
+        Map<String, Object> map = new HashMap<>();
+        try {
+            if (CaptchaUtil.ver(code, request)) {
+                //获取主体对象
+                Subject subject = SecurityUtils.getSubject();
+                User user = userService.findUserByUsername(username);
+                password = CommunityUtil.md5(password + user.getSalt());
+                UsernamePasswordToken token = new UsernamePasswordToken(username, password, rememberme);
+
+                subject.login(token);
+                return "redirect:/index";
+            } else {
+                CaptchaUtil.clear(request);
+                model.addAttribute("kaptchaMsg", "验证码不正确");
+                return "/site/login";
+            }
+        } catch (UnknownAccountException e) {
+            e.printStackTrace();
+            map.put("usernameMsg", "用户名错误!");
+            System.out.println("用户名错误!");
+        } catch (IncorrectCredentialsException e) {
+            e.printStackTrace();
+            map.put("usernameMsg", "密码错误!");
+            System.out.println("密码错误!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
 
-        int expiredSeconds = rememberme ? REMEMBER_EXPIRED_SECONDS : DEFAULT_EXPIRED_SECONDS;
-        Map<String, Object> map = userService.login(username, password, expiredSeconds);
-        if (map.containsKey("ticket")) {
-            Cookie cookie = new Cookie("ticket", map.get("ticket").toString());
-            cookie.setPath(contextPath);
-            cookie.setMaxAge(expiredSeconds);
-            response.addCookie(cookie);
+        model.addAttribute("usernameMsg", map.get("usernameMsg"));
+        model.addAttribute("passwordMsg", map.get("passwordMsg"));
+        return "/site/login";
 
-            return "redirect:/index";
-        } else {
-            model.addAttribute("usernameMsg", map.get("usernameMsg"));
-            model.addAttribute("passwordMsg", map.get("passwordMsg"));
-            return "/site/login";
-        }
     }
 
     @RequestMapping(path = "/logout", method = RequestMethod.GET)
     public String logout(@CookieValue("ticket") String ticket) {
-        userService.logout(ticket);
-        SecurityContextHolder.clearContext();
+        Subject subject = SecurityUtils.getSubject();
+        subject.logout();//退出用户
         return "redirect:/index";
     }
 

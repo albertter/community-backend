@@ -1,6 +1,5 @@
 package com.bjut.community.controller;
 
-import com.bjut.community.annotation.LoginRequired;
 import com.bjut.community.entity.Event;
 import com.bjut.community.entity.Page;
 import com.bjut.community.entity.User;
@@ -9,7 +8,7 @@ import com.bjut.community.service.FollowService;
 import com.bjut.community.service.UserService;
 import com.bjut.community.util.CommunityConstant;
 import com.bjut.community.util.CommunityUtil;
-import com.bjut.community.util.HostHolder;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,23 +30,22 @@ public class FollowController implements CommunityConstant {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private HostHolder hostHolder;
+    //    @Autowired
+//    private HostHolder hostHolder;
     @Autowired
     private EventProducer eventProducer;
 
-    @LoginRequired
     @RequestMapping(path = "/follow", method = RequestMethod.POST)
     @ResponseBody
     public String follow(int entityType, int entityId) {
-        User user = hostHolder.getUser();
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
         //关注
         followService.follow(user.getId(), entityType, entityId);
 
         // 触发事件
         Event event = new Event()
                 .setTopic(TOPIC_FOLLOW)
-                .setUserId(hostHolder.getUser().getId())
+                .setUserId(user.getId())
                 .setEntityId(entityId)
                 .setEntityType(entityType)
                 .setEntityUserId(entityId);
@@ -56,11 +54,10 @@ public class FollowController implements CommunityConstant {
         return CommunityUtil.getJSONString(0, "关注成功");
     }
 
-    @LoginRequired
     @RequestMapping(path = "/unfollow", method = RequestMethod.POST)
     @ResponseBody
     public String unfollow(int entityType, int entityId) {
-        User user = hostHolder.getUser();
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
         //关注
         followService.unfollow(user.getId(), entityType, entityId);
         return CommunityUtil.getJSONString(0, "取消关注成功");
@@ -119,9 +116,10 @@ public class FollowController implements CommunityConstant {
     }
 
     private boolean hasFollowed(int userId) {
-        if (hostHolder.getUser() == null) {
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
+        if (user == null) {
             return false;
         }
-        return followService.hasFollowed(hostHolder.getUser().getId(), ENTITY_TYPE_USER, userId);
+        return followService.hasFollowed(user.getId(), ENTITY_TYPE_USER, userId);
     }
 }

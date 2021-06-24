@@ -22,11 +22,19 @@ public class DataService {
 
     private SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 
+    /**
+     * @param ip IP address
+     */
     public void recordUV(String ip) {
         String redisKey = RedisKeyUtil.getUVKey(df.format(new Date()));
         redisTemplate.opsForHyperLogLog().add(redisKey, ip);
     }
 
+    /**
+     * @param start start date
+     * @param end   end date
+     * @return
+     */
     public long calculateUV(Date start, Date end) {
         if (start == null || end == null) {
             throw new IllegalArgumentException("parms empty excception");

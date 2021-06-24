@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
  * 持有用户信息，用于代替session对象
  */
 @Component
+@Deprecated
 public class HostHolder {
     private ThreadLocal<User> users = new ThreadLocal<>();
 

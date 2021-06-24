@@ -9,6 +9,7 @@ import com.bjut.community.service.UserService;
 import com.bjut.community.util.CommunityConstant;
 import com.bjut.community.util.CommunityUtil;
 import com.bjut.community.util.HostHolder;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,14 +26,14 @@ import java.util.*;
 public class MessageController implements CommunityConstant {
     @Autowired
     private MessageService messageService;
-    @Autowired
-    private HostHolder hostHolder;
+    //    @Autowired
+//    private HostHolder hostHolder;
     @Autowired
     private UserService userService;
 
     @RequestMapping(path = "/letter/list", method = RequestMethod.GET)
     public String getLetterList(Model model, Page page) {
-        User user = hostHolder.getUser();
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
 
         // 评论分页信息
         page.setLimit(5);
@@ -66,7 +67,7 @@ public class MessageController implements CommunityConstant {
 
     @RequestMapping(path = "/letter/detail/{conversationId}", method = RequestMethod.GET)
     public String getLetterDetail(@PathVariable("conversationId") String conversationId, Model model, Page page) {
-        User user = hostHolder.getUser();
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
 
         // 评论分页信息
         page.setLimit(5);
@@ -95,11 +96,12 @@ public class MessageController implements CommunityConstant {
     }
 
     public User getLetterTarget(String conversationId) {
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
         String[] ids = conversationId.split("_");
         int id0 = Integer.parseInt(ids[0]);
         int id1 = Integer.parseInt(ids[1]);
 
-        if (hostHolder.getUser().getId() == id0) {
+        if (user.getId() == id0) {
             return userService.findUserById(id1);
         } else {
             return userService.findUserById(id0);
@@ -107,10 +109,11 @@ public class MessageController implements CommunityConstant {
     }
 
     public List<Integer> getLetterIds(List<Message> letterList) {
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
         List<Integer> ids = new ArrayList<>();
         if (letterList != null) {
             for (Message letter : letterList) {
-                if (hostHolder.getUser().getId() == letter.getToId() && letter.getStatus() == 0) {
+                if (user.getId() == letter.getToId() && letter.getStatus() == 0) {
                     ids.add(letter.getId());
                 }
             }
@@ -121,12 +124,13 @@ public class MessageController implements CommunityConstant {
     @RequestMapping(path = "/letter/send", method = RequestMethod.POST)
     @ResponseBody
     public String sendLetter(String toName, String content) {
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
         User target = userService.findUserByUsername(toName);
         if (target == null) {
             return CommunityUtil.getJSONString(1, "目标用户不存在");
         }
         Message message = new Message();
-        message.setFromId(hostHolder.getUser().getId());
+        message.setFromId(user.getId());
         message.setToId(target.getId());
         message.setCreateTime(new Date());
         message.setContent(content);
@@ -142,8 +146,7 @@ public class MessageController implements CommunityConstant {
 
     @RequestMapping(path = "/notice/list", method = RequestMethod.GET)
     public String getNoticeList(Model model) {
-
-        User user = hostHolder.getUser();
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
 
         // 查询评论通知
         Message message = messageService.findLatestNotice(user.getId(), TOPIC_COMMENT);
@@ -225,7 +228,7 @@ public class MessageController implements CommunityConstant {
 
     @RequestMapping(path = "/notice/detail/{topic}", method = RequestMethod.GET)
     public String geNoticerDetail(@PathVariable("topic") String topic, Model model, Page page) {
-        User user = hostHolder.getUser();
+        User user = (User) SecurityUtils.getSubject().getPrincipal();
 
         // 分页信息
         page.setLimit(5);

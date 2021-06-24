@@ -42,4 +42,9 @@
         set password=#{password}
         where id = #{id}
     </update>
+    <select id="selectTypeByName">
+        select type
+        from user
+        where username = #{name}
+    </select>
 </mapper>

@@ -4,8 +4,8 @@ public class RedisKeyUtil {
     private static final String SPLIT = ":";
     private static final String PREFIX_ENTITY_LIKE = "like:entity";
     private static final String PREFIX_USER_LIKE = "like:user";
-    private static final String PREFIX_FOLLOWEE = "like:followee";
-    private static final String PREFIX_FOLLOWER = "like:follower";
+    private static final String PREFIX_FOLLOWEE = "followee";
+    private static final String PREFIX_FOLLOWER = "follower";
     private static final String PREFIX_CAPTCHA = "captcha";
     private static final String PREFIX_TICKET = "ticket";
     private static final String PREFIX_USER = "user";
