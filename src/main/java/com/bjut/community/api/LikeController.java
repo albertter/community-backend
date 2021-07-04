@@ -1,4 +1,4 @@
-package com.bjut.community.controller;
+package com.bjut.community.api;
 
 import com.bjut.community.entity.Event;
 import com.bjut.community.entity.User;
@@ -6,20 +6,20 @@ import com.bjut.community.event.EventProducer;
 import com.bjut.community.service.DiscussPostService;
 import com.bjut.community.service.LikeService;
 import com.bjut.community.util.CommunityConstant;
-import com.bjut.community.util.CommunityUtil;
-import com.bjut.community.util.HostHolder;
+import com.bjut.community.util.Result;
+import com.bjut.community.util.ResultGenerator;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
 
 
-@Controller
+@RestController
 public class LikeController implements CommunityConstant {
 //    private static final Logger logger = LoggerFactory.getLogger(LikeController.class);
 
@@ -27,7 +27,7 @@ public class LikeController implements CommunityConstant {
     private LikeService likeService;
 
     @Autowired
-    private DiscussPostService discussPostService;
+    private DiscussPostService DiscussPostService;
 //    @Autowired
 //    private HostHolder hostHolder;
 
@@ -35,8 +35,8 @@ public class LikeController implements CommunityConstant {
     private EventProducer eventProducer;
 
     @RequestMapping(path = "/like", method = RequestMethod.POST)
-    @ResponseBody
-    public String like(int entityType, int entityId, int entityUserId, int postId) {
+
+    public Result like(int entityType, int entityId, int entityUserId, int postId) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
         //点赞
         likeService.like(user.getId(), entityType, entityId, entityUserId);
@@ -62,7 +62,7 @@ public class LikeController implements CommunityConstant {
         }
 
 
-        return CommunityUtil.getJSONString(0, null, map);
+        return ResultGenerator.genSuccessResult("关注成功", map);
 
     }
 }

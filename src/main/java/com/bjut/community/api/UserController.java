@@ -1,10 +1,10 @@
-package com.bjut.community.controller;
+package com.bjut.community.api;
 
 
 import com.bjut.community.entity.User;
-import com.bjut.community.service.FollowService;
-import com.bjut.community.service.LikeService;
-import com.bjut.community.service.UserService;
+import com.bjut.community.service.impl.FollowServiceImpl;
+import com.bjut.community.service.impl.LikeServiceImpl;
+import com.bjut.community.service.impl.UserServiceImpl;
 import com.bjut.community.util.CommunityConstant;
 import com.bjut.community.util.CommunityUtil;
 import com.mysql.cj.util.StringUtils;
@@ -42,14 +42,14 @@ public class UserController implements CommunityConstant {
     private String contextPath;
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
 
     //    @Autowired
 //    private HostHolder hostHolder;
     @Autowired
-    private LikeService likeService;
+    private LikeServiceImpl likeServiceImpl;
     @Autowired
-    private FollowService followService;
+    private FollowServiceImpl followServiceImpl;
 
     //    @LoginRequired
     @RequestMapping(path = "/setting", method = RequestMethod.GET)
@@ -134,18 +134,18 @@ public class UserController implements CommunityConstant {
         }
         model.addAttribute("user", user);
         //点赞数
-        int likeCount = likeService.findUserLikeCount(userId);
+        int likeCount = likeServiceImpl.findUserLikeCount(userId);
         model.addAttribute("likeCount", likeCount);
         //关注数
-        long followeeCount = followService.findFolloweeCount(userId, ENTITY_TYPE_USER);
+        long followeeCount = followServiceImpl.findFolloweeCount(userId, ENTITY_TYPE_USER);
         model.addAttribute("followeeCount", followeeCount);
         //粉丝数
-        long followerCount = followService.findFollowerCount(ENTITY_TYPE_USER, userId);
+        long followerCount = followServiceImpl.findFollowerCount(ENTITY_TYPE_USER, userId);
         model.addAttribute("followerCount", followerCount);
         //当前用户是否关注该用户
         boolean hasFollowed = false;
         if (loginUser != null) {
-            hasFollowed = followService.hasFollowed(loginUser.getId(), ENTITY_TYPE_USER, userId);
+            hasFollowed = followServiceImpl.hasFollowed(loginUser.getId(), ENTITY_TYPE_USER, userId);
         }
         model.addAttribute("hasFollowed", hasFollowed);
 

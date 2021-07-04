@@ -1,4 +1,4 @@
-package com.bjut.community.controller;
+package com.bjut.community.api;
 
 import com.bjut.community.entity.Event;
 import com.bjut.community.entity.Page;
@@ -7,23 +7,22 @@ import com.bjut.community.event.EventProducer;
 import com.bjut.community.service.FollowService;
 import com.bjut.community.service.UserService;
 import com.bjut.community.util.CommunityConstant;
-import com.bjut.community.util.CommunityUtil;
+import com.bjut.community.util.Result;
+import com.bjut.community.util.ResultGenerator;
 import org.apache.shiro.SecurityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 
-@Controller
+@RestController
 public class FollowController implements CommunityConstant {
-//    private static final Logger logger = LoggerFactory.getLogger(LikeController.class);
+    private static final Logger logger = LoggerFactory.getLogger(FollowController.class);
 
     @Autowired
     private FollowService followService;
@@ -35,9 +34,15 @@ public class FollowController implements CommunityConstant {
     @Autowired
     private EventProducer eventProducer;
 
+    /**
+     * 关注
+     *
+     * @param entityType 实体类型：帖子 1、评论 2
+     * @param entityId   实体ID
+     * @return 消息
+     */
     @RequestMapping(path = "/follow", method = RequestMethod.POST)
-    @ResponseBody
-    public String follow(int entityType, int entityId) {
+    public Result follow(int entityType, int entityId) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
         //关注
         followService.follow(user.getId(), entityType, entityId);
@@ -51,51 +56,67 @@ public class FollowController implements CommunityConstant {
                 .setEntityUserId(entityId);
         eventProducer.fireEvent(event);
 
-        return CommunityUtil.getJSONString(0, "关注成功");
+        return ResultGenerator.genSuccessResult("关注成功");
     }
 
+    /**
+     * 取消关注
+     *
+     * @param entityType 实体类型：帖子 1、评论 2
+     * @param entityId   实体ID
+     * @return 消息
+     */
     @RequestMapping(path = "/unfollow", method = RequestMethod.POST)
-    @ResponseBody
-    public String unfollow(int entityType, int entityId) {
+    public Result unfollow(int entityType, int entityId) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
         //关注
         followService.unfollow(user.getId(), entityType, entityId);
-        return CommunityUtil.getJSONString(0, "取消关注成功");
+        return ResultGenerator.genSuccessResult("取消关注成功");
     }
 
+
+    /**
+     * @param userId
+     * @param offset
+     * @param limit
+     * @return
+     */
     @RequestMapping(path = "/followees/{userId}", method = RequestMethod.GET)
-    public String getFollowees(@PathVariable("userId") int userId, Page page, Model model) {
+    public Result getFollowees(@PathVariable("userId") int userId, @RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
+                               @RequestParam(value = "limit", required = false, defaultValue = "10") int limit) {
         User user = userService.findUserById(userId);
         if (user == null) {
-            throw new RuntimeException("该用户不存在");
+            return ResultGenerator.genErrorResult(400, "该用户不存在");
         }
-        model.addAttribute("user", user);
         //关注数
         int followeeCount = (int) followService.findFolloweeCount(userId, ENTITY_TYPE_USER);
 
         // 评论分页信息
-        page.setLimit(5);
-        page.setPath("/followees/" + userId);
-        page.setRows(followeeCount);
+//        page.setLimit(5);
+//        page.setPath("/followees/" + userId);
+//        page.setRows(followeeCount);
 
-        List<Map<String, Object>> userList = followService.findFollowees(userId, page.getOffset(), page.getLimit());
+        List<Map<String, Object>> userList = followService.findFollowees(userId, offset, limit);
         if (userList != null) {
             for (Map<String, Object> map : userList) {
                 User u = (User) map.get("user");
                 map.put("hasFollowed", hasFollowed(u.getId()));
             }
         }
-        model.addAttribute("users", userList);
-        return "/site/followee";
+        Map<String, Object> map = new HashMap<>(2);
+        map.put("followeeCount", followeeCount);
+        map.put("userList", userList);
+        return ResultGenerator.genSuccessResult(map);
+
     }
 
     @RequestMapping(path = "/followers/{userId}", method = RequestMethod.GET)
-    public String getFollowers(@PathVariable("userId") int userId, Page page, Model model) {
+    public Result getFollowers(@PathVariable("userId") int userId, Page page) {
         User user = userService.findUserById(userId);
         if (user == null) {
             throw new RuntimeException("该用户不存在");
         }
-        model.addAttribute("user", user);
+
         //关注数
         int followerCount = (int) followService.findFollowerCount(ENTITY_TYPE_USER, userId);
 
@@ -111,8 +132,10 @@ public class FollowController implements CommunityConstant {
                 map.put("hasFollowed", hasFollowed(u.getId()));
             }
         }
-        model.addAttribute("users", userList);
-        return "/site/follower";
+        Map<String, Object> map = new HashMap<>(2);
+        map.put("followerCount", followerCount);
+        map.put("userList", userList);
+        return ResultGenerator.genSuccessResult(map);
     }
 
     private boolean hasFollowed(int userId) {

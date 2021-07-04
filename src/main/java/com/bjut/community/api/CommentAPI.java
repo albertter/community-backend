@@ -1,4 +1,4 @@
-package com.bjut.community.controller;
+package com.bjut.community.api;
 
 import com.bjut.community.entity.Comment;
 import com.bjut.community.entity.DiscussPost;
@@ -6,34 +6,41 @@ import com.bjut.community.entity.Event;
 import com.bjut.community.entity.User;
 import com.bjut.community.event.EventProducer;
 import com.bjut.community.service.CommentService;
-import com.bjut.community.service.DiscussPostService;
-import com.bjut.community.service.UserService;
+import com.bjut.community.service.impl.DiscussPostServiceImpl;
+import com.bjut.community.service.impl.UserServiceImpl;
 import com.bjut.community.util.CommunityConstant;
+import com.bjut.community.util.Result;
+import com.bjut.community.util.ResultGenerator;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 
-@Controller
+/**
+ * @author zhen
+ */
+@RestController
 @RequestMapping(path = "/comment")
-public class CommentController implements CommunityConstant {
+public class CommentAPI implements CommunityConstant {
     @Autowired
-    private DiscussPostService discussPostService;
-    //    @Autowired
-//    private HostHolder hostHolder;
+    private DiscussPostServiceImpl discussPostServiceImpl;
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
     @Autowired
     private CommentService commentService;
     @Autowired
     private EventProducer eventProducer;
 
-    @RequestMapping(path = "/add/{discussPostId}", method = RequestMethod.POST)
-    public String getDiscussPost(@PathVariable("discussPostId") int discussPostId, Comment comment) {
+    /**
+     * 向帖子添加评论
+     *
+     * @param discussPostId 帖子id
+     * @param comment       评论
+     * @return 评论成功
+     */
+    @RequestMapping(path = "/{discussPostId}/add", method = RequestMethod.POST)
+    public Result addComment(@PathVariable("discussPostId") int discussPostId, @RequestBody Comment comment) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
         comment.setUserId(user.getId());
         comment.setStatus(0);
@@ -49,18 +56,15 @@ public class CommentController implements CommunityConstant {
                 .setData("postId", discussPostId);
 
         if (comment.getEntityType() == ENTITY_TYPE_POST) {
-            DiscussPost target = discussPostService.findDiscussPostById(comment.getEntityId());
+            DiscussPost target = discussPostServiceImpl.findDiscussPostById(comment.getEntityId());
             event.setEntityUserId(target.getUserId());
 
         } else if (comment.getEntityType() == ENTITY_TYPE_COMMENT) {
             Comment target = commentService.findCommentsById(comment.getEntityId());
             event.setEntityUserId(target.getUserId());
         }
-
         eventProducer.fireEvent(event);
 
-
-        return "redirect:/discuss/detail/" + discussPostId;
-
+        return ResultGenerator.genSuccessResult("发帖成功");
     }
 }

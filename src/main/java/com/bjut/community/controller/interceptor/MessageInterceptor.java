@@ -1,7 +1,7 @@
 package com.bjut.community.controller.interceptor;
 
 import com.bjut.community.entity.User;
-import com.bjut.community.service.MessageService;
+import com.bjut.community.service.impl.MessageServiceImpl;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,14 +18,14 @@ public class MessageInterceptor implements HandlerInterceptor {
 //    private HostHolder hostHolder;
 
     @Autowired
-    private MessageService messageService;
+    private MessageServiceImpl messageServiceImpl;
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
         if (user != null && modelAndView != null) {
-            int letterUnreadCount = messageService.findLettersUnreadCount(user.getId(), null);
-            int noticeUnreadCount = messageService.findNoticeUnreadCount(user.getId(), null);
+            int letterUnreadCount = messageServiceImpl.findLettersUnreadCount(user.getId(), null);
+            int noticeUnreadCount = messageServiceImpl.findNoticeUnreadCount(user.getId(), null);
             modelAndView.addObject("allUnreadCount", letterUnreadCount + noticeUnreadCount);
         }
     }

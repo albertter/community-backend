@@ -1,7 +1,7 @@
 package com.bjut.community.controller.interceptor;
 
 import com.bjut.community.entity.User;
-import com.bjut.community.service.UserService;
+import com.bjut.community.service.impl.UserServiceImpl;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 public class LoginTicketInterceptor implements HandlerInterceptor {
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
 //
 //    @Autowired
 //    private HostHolder hostHolder;
@@ -45,11 +45,11 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
     @Override
     //只有在 preHandle() 方法返回值为true 时才会执行。会在Controller 中的方法调用之后，DispatcherServlet 返回渲染视图之前被调用。
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-        User user = (User) SecurityUtils.getSubject().getPrincipal();
-        System.out.println("loginuser " + user);
-        if (user != null && modelAndView != null) {
-            modelAndView.addObject("loginUser", user);
-        }
+//        User user = (User) SecurityUtils.getSubject().getPrincipal();
+//        System.out.println("loginuser " + user);
+//        if (user != null && modelAndView != null) {
+//            modelAndView.addObject("loginUser", user);
+//        }
     }
 
 //    @Override
