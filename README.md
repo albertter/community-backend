@@ -1,2 +1,4 @@
-# 仿牛客网讨论区
-A community project based on Java SSM.
+# 一个论坛网站-后台
+spring boot + shiro + JWT + redis + restful
+A community project based on Spring Boot.
+
