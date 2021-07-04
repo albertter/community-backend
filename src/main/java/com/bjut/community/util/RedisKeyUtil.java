@@ -53,6 +53,10 @@ public class RedisKeyUtil {
         return PREFIX_UV + SPLIT + startDate + SPLIT + endDate;
     }
 
+    public static String getPostScoreKey() {
+        return PREFIX_POST + SPLIT + "score";
+    }
+
     public static String getDAUKey(String date) {
         return PREFIX_DAU + SPLIT + date;
     }

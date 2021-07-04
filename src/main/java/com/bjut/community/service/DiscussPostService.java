@@ -1,66 +1,35 @@
 package com.bjut.community.service;
 
-import com.bjut.community.dao.DiscussPostMapper;
 import com.bjut.community.entity.DiscussPost;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
-//@CacheConfig(cacheNames = "PostCache")
-//@Transactional
-public class DiscussPostService {
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-    @Autowired
-    private DiscussPostMapper discussPostMapper;
-//    @Autowired
-//    private RedisTemplate redisTemplate;
+public interface DiscussPostService {
+    /**
+     * 分页查询帖子列表
+     * @param userId 用户ID
+     * @param offset 起始页
+     * @param limit 总页数
+     * @return 帖子列表
+     */
+    public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit);
 
     //    @Cacheable
-    public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit) {
-        return discussPostMapper.selectDiscussPosts(userId, offset, limit);
-    }
-
-    //    @Cacheable
-    public int findDiscussPostRows(int userID) {
-        return discussPostMapper.selectDiscussPostRows(userID);
-    }
+    public int findDiscussPostRows(int userId);
 
     //    @CachePut(key = "#discussPost.id")
-    public int addDiscussPost(DiscussPost discussPost) {
-        if (discussPost == null) {
-            throw new IllegalArgumentException("参数不能为空");
-        }
-        return discussPostMapper.insertDiscussPost(discussPost);
-
-    }
+    public int addDiscussPost(DiscussPost discussPost);
 
     //    @Cacheable
-    public DiscussPost findDiscussPostById(int id) {
-        return discussPostMapper.selectDiscussPostById(id);
-    }
+    public DiscussPost findDiscussPostById(int id);
 
-    public int updateCommentCount(int id, int commentCount) {
+    public int updateCommentCount(int id, int commentCount);
 
-        return discussPostMapper.updateCommentCount(id, commentCount);
+    public int updateType(int id, int type);
 
-    }
+    public int updateStatus(int id, int status);
 
-    public int updateType(int id, int type) {
-        return discussPostMapper.updateType(id, type);
-    }
-
-    public int updateStatus(int id, int status) {
-        return discussPostMapper.updateStatus(id, status);
-    }
-
-    public int updateScore(int id, double score) {
-        return discussPostMapper.updateScore(id, score);
-    }
+    public int updateScore(int id, double score);
 
 //    private DiscussPost getCache(int postId) {
 //        String redisKey = RedisKeyUtil.getPostKey(postId);

@@ -1,4 +1,4 @@
-package com.bjut.community.service;
+package com.bjut.community.service.impl;
 
 import com.bjut.community.dao.AlphaDao;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,10 +8,10 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 @Service
-public class AlphaService {
+public class AlphaServiceImpl {
     @Autowired
     private AlphaDao alphaDao;
-    public AlphaService() {
+    public AlphaServiceImpl() {
         System.out.println("实例化AlphaService");
     }
 
