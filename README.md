@@ -1,4 +1,14 @@
-# 一个论坛网站-后台
-spring boot + shiro + JWT + redis + restful
-A community project based on Spring Boot.
+# 论坛社区-后端
+## 简介
+基本的社区论坛后端，实现邮箱注册及验证、登录、发帖、评论、私信、系统通知、点赞、关注、权限控制、数据统计等功能。
+## 技术栈
+1. springboot
+2. MySQL
+3. Redis
+4. kafka
+5. shiro
+6. JWT
+
+
+
 
