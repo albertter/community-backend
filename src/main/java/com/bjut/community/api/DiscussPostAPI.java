@@ -2,6 +2,7 @@ package com.bjut.community.api;
 
 import com.bjut.community.entity.*;
 import com.bjut.community.event.EventProducer;
+import com.bjut.community.jwt.JWTUtil;
 import com.bjut.community.service.CommentService;
 import com.bjut.community.service.DiscussPostService;
 import com.bjut.community.service.LikeService;
@@ -34,10 +35,12 @@ public class DiscussPostAPI implements CommunityConstant {
     private RedisTemplate redisTemplate;
 
     @RequestMapping(path = "/add", method = RequestMethod.POST)
-    public String addDiscussPost(String title, String content) {
-        User user = (User) SecurityUtils.getSubject().getPrincipal();
+    public Result addDiscussPost(@RequestParam("title") String title, @RequestParam("content") String content) {
+        String username = JWTUtil.getUsername((String) SecurityUtils.getSubject().getPrincipal());
+        User user = userService.findUserByUsername(username);
+        System.out.println("user:" + user);
         if (user == null) {
-            return CommunityUtil.getJSONString(403, "未登录");
+            return ResultGenerator.genFailResult("未登录");
         }
         DiscussPost post = new DiscussPost();
         post.setTitle(title);
@@ -59,7 +62,7 @@ public class DiscussPostAPI implements CommunityConstant {
         String redisKey = RedisKeyUtil.getPostScoreKey();
         redisTemplate.opsForSet().add(redisKey, post.getId());
 
-        return CommunityUtil.getJSONString(0, "发布成功");
+        return ResultGenerator.genSuccessResult("发布成功");
     }
 
     /**

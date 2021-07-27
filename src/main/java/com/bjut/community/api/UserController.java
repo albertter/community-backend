@@ -2,22 +2,24 @@ package com.bjut.community.api;
 
 
 import com.bjut.community.entity.User;
-import com.bjut.community.service.impl.FollowServiceImpl;
+import com.bjut.community.service.FollowService;
 import com.bjut.community.service.impl.LikeServiceImpl;
 import com.bjut.community.service.impl.UserServiceImpl;
 import com.bjut.community.util.CommunityConstant;
 import com.bjut.community.util.CommunityUtil;
+import com.bjut.community.util.Result;
+import com.bjut.community.util.ResultGenerator;
 import com.mysql.cj.util.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -25,9 +27,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 
 
-@Controller
+@RestController
 @RequestMapping("/user")
 public class UserController implements CommunityConstant {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -49,27 +52,19 @@ public class UserController implements CommunityConstant {
     @Autowired
     private LikeServiceImpl likeServiceImpl;
     @Autowired
-    private FollowServiceImpl followServiceImpl;
+    private FollowService followService;
 
-    //    @LoginRequired
-    @RequestMapping(path = "/setting", method = RequestMethod.GET)
-    public String getSettingPage() {
-        return "/site/setting";
-    }
 
-    //    @LoginRequired
     @RequestMapping(path = "/upload", method = RequestMethod.POST)
-    public String uploadHeader(MultipartFile headerImage, Model model) {
+    public Result uploadHeader(MultipartFile headerImage) {
         if (headerImage == null) {
-            model.addAttribute("error", "没有选择图片");
-            return "/site/setting";
+            return ResultGenerator.genErrorResult(403, "没有选择头像");
         }
         String fileName = headerImage.getOriginalFilename();
         assert fileName != null;
         String suffix = fileName.substring(fileName.lastIndexOf("."));
         if (StringUtils.isNullOrEmpty(suffix)) {
-            model.addAttribute("error", "文件格式不正确");
-            return "/site/setting";
+            return ResultGenerator.genErrorResult(403, "文件格式不正确");
         }
 
         fileName = CommunityUtil.generateUUID() + suffix;
@@ -84,7 +79,7 @@ public class UserController implements CommunityConstant {
         String headerUrl = domainPath + contextPath + "/user/header/" + fileName;
         userService.updateHeader(user.getId(), headerUrl);
 
-        return "redirect:/index";
+        return ResultGenerator.genSuccessResult("头像上传成功");
     }
 
     @RequestMapping(path = "/header/{fileName}", method = RequestMethod.GET)
@@ -126,29 +121,28 @@ public class UserController implements CommunityConstant {
     }
 
     @RequestMapping(path = "/profile/{userId}", method = RequestMethod.GET)
-    public String updatePassword(@PathVariable("userId") int userId, Model model) {
+    public Result updatePassword(@PathVariable("userId") int userId) {
         User loginUser = (User) SecurityUtils.getSubject().getPrincipal();
         User user = userService.findUserById(userId);
         if (user == null) {
             throw new RuntimeException("该用户不存在");
         }
-        model.addAttribute("user", user);
         //点赞数
         int likeCount = likeServiceImpl.findUserLikeCount(userId);
-        model.addAttribute("likeCount", likeCount);
         //关注数
-        long followeeCount = followServiceImpl.findFolloweeCount(userId, ENTITY_TYPE_USER);
-        model.addAttribute("followeeCount", followeeCount);
+        long followeeCount = followService.findFolloweeCount(userId, ENTITY_TYPE_USER);
         //粉丝数
-        long followerCount = followServiceImpl.findFollowerCount(ENTITY_TYPE_USER, userId);
-        model.addAttribute("followerCount", followerCount);
+        long followerCount = followService.findFollowerCount(ENTITY_TYPE_USER, userId);
         //当前用户是否关注该用户
         boolean hasFollowed = false;
         if (loginUser != null) {
-            hasFollowed = followServiceImpl.hasFollowed(loginUser.getId(), ENTITY_TYPE_USER, userId);
+            hasFollowed = followService.hasFollowed(loginUser.getId(), ENTITY_TYPE_USER, userId);
         }
-        model.addAttribute("hasFollowed", hasFollowed);
-
-        return "/site/profile";
+        HashMap<String, Object> hashMap = new HashMap<>();
+        hashMap.put("likeCount", likeCount);
+        hashMap.put("followeeCount", followeeCount);
+        hashMap.put("followerCount", followerCount);
+        hashMap.put("hasFollowed", hasFollowed);
+        return ResultGenerator.genSuccessResult(hashMap);
     }
 }
