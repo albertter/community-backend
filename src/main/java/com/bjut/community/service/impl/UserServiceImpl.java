@@ -11,6 +11,9 @@ import com.bjut.community.util.RedisKeyUtil;
 import com.mysql.cj.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +43,7 @@ public class UserServiceImpl implements CommunityConstant, UserService {
     private String contextPath;
 
     @Override
+    @Cacheable("UserById")
     public User findUserById(int id) {
         return userMapper.selectById(id);
 //        User user = getCache(id);
@@ -238,6 +242,15 @@ public class UserServiceImpl implements CommunityConstant, UserService {
 //        return list;
 //    }
     @Override
+    @Caching(
+            cacheable = {
+                    @Cacheable(value = "user", key = "#username")
+            },
+            put = {
+                    @CachePut(value = "user", key = "#result.id", condition = "#result != null"),
+                    @CachePut(value = "user", key = "#result.email", condition = "#result != null")
+            }
+    )
     public User findUserByName(String username) {
         return userMapper.selectByName(username);
     }

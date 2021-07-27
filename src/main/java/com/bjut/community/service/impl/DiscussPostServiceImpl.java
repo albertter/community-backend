@@ -6,7 +6,8 @@ import com.bjut.community.service.DiscussPostService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,19 +22,20 @@ public class DiscussPostServiceImpl implements DiscussPostService {
 //    @Autowired
 //    private RedisTemplate redisTemplate;
 
-    //    @Cacheable
+    @Cacheable(value = "DiscussPosts", condition = "#offset<5")
     @Override
     public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit) {
         return discussPostMapper.selectDiscussPosts(userId, offset, limit);
     }
 
-    //    @Cacheable
+    @Cacheable("DiscussPostRows")
     @Override
     public int findDiscussPostRows(int userId) {
         return discussPostMapper.selectDiscussPostRows(userId);
     }
 
     //    @CachePut(key = "#discussPost.id")
+    @CachePut(cacheNames = "addposts", key = "#discussPost.id")
     @Override
     public int addDiscussPost(DiscussPost discussPost) {
         if (discussPost == null) {
@@ -43,7 +45,7 @@ public class DiscussPostServiceImpl implements DiscussPostService {
 
     }
 
-    //    @Cacheable
+    @Cacheable("DiscussPostById")
     @Override
     public DiscussPost findDiscussPostById(int id) {
         return discussPostMapper.selectDiscussPostById(id);
