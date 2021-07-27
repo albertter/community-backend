@@ -7,7 +7,10 @@ import com.bjut.community.service.CommentService;
 import com.bjut.community.service.DiscussPostService;
 import com.bjut.community.service.LikeService;
 import com.bjut.community.service.UserService;
-import com.bjut.community.util.*;
+import com.bjut.community.util.CommunityConstant;
+import com.bjut.community.util.RedisKeyUtil;
+import com.bjut.community.util.Result;
+import com.bjut.community.util.ResultGenerator;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -161,8 +164,9 @@ public class DiscussPostAPI implements CommunityConstant {
      */
     @RequestMapping(path = "/posts", method = RequestMethod.GET)
     public Result getDiscussPostList(@RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
-                                     @RequestParam(value = "limit", required = false, defaultValue = "10") int limit) {
-        return ResultGenerator.genSuccessResult(discussPostService.findDiscussPosts(0, offset, limit));
+                                     @RequestParam(value = "limit", required = false, defaultValue = "10") int limit,
+                                     @RequestParam(value = "orderMod", required = false, defaultValue = "0") int orderMod) {
+        return ResultGenerator.genSuccessResult(discussPostService.findDiscussPosts(0, offset, limit, orderMod));
     }
 
 
@@ -172,7 +176,7 @@ public class DiscussPostAPI implements CommunityConstant {
      * @param id 帖子id
      * @return 成功结果
      */
-    @RequestMapping(path = "/top", method = RequestMethod.POST)
+    @RequestMapping(path = "/top", method = RequestMethod.PUT)
     @RequiresRoles("admin")
     public Result setTop(int id) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
@@ -195,7 +199,7 @@ public class DiscussPostAPI implements CommunityConstant {
      * @param id 帖子id
      * @return 成功结果
      */
-    @RequestMapping(path = "/wonderful", method = RequestMethod.POST)
+    @RequestMapping(path = "/wonderful", method = RequestMethod.PUT)
     @RequiresRoles("admin")
     public Result setWonderful(int id) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
@@ -222,7 +226,7 @@ public class DiscussPostAPI implements CommunityConstant {
      * @param id 帖子id
      * @return 成功结果
      */
-    @RequestMapping(path = "/delete", method = RequestMethod.POST)
+    @RequestMapping(path = "/delete", method = RequestMethod.DELETE)
     @RequiresRoles("admin")
     public Result setDelete(int id) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();

@@ -11,11 +11,11 @@ import com.bjut.community.util.Result;
 import com.bjut.community.util.ResultGenerator;
 import com.mysql.cj.util.StringUtils;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -109,19 +109,18 @@ public class UserController implements CommunityConstant {
 
     }
 
-    //    @LoginRequired
-    @RequestMapping(path = "/update", method = RequestMethod.POST)
-    public String updatePassword(Model model, String oldPassword, String newPassword) {
+    @RequiresAuthentication
+    @RequestMapping(path = "/update", method = RequestMethod.PUT)
+    public Result updatePassword(String oldPassword, String newPassword) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
         if (userService.updatePassword(user, oldPassword, newPassword) == 0) {
-            model.addAttribute("error", "原密码错误");
-            return "site/setting";
+            return ResultGenerator.genErrorResult(400, "旧密码输入错误");
         }
-        return "redirect:/logout";
+        return ResultGenerator.genSuccessResult("密码修改成功");
     }
 
     @RequestMapping(path = "/profile/{userId}", method = RequestMethod.GET)
-    public Result updatePassword(@PathVariable("userId") int userId) {
+    public Result getProfile(@PathVariable("userId") int userId) {
         User loginUser = (User) SecurityUtils.getSubject().getPrincipal();
         User user = userService.findUserById(userId);
         if (user == null) {

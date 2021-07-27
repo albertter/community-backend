@@ -1,9 +1,10 @@
 package com.bjut.community.entity;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Event {
+public class Event implements Serializable {
 
     private String topic;
     private int userId;

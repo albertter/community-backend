@@ -24,8 +24,8 @@ public class DiscussPostServiceImpl implements DiscussPostService {
 
     @Cacheable(value = "DiscussPosts", condition = "#offset<5")
     @Override
-    public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit) {
-        return discussPostMapper.selectDiscussPosts(userId, offset, limit);
+    public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit, int orderMod) {
+        return discussPostMapper.selectDiscussPosts(userId, offset, limit, orderMod);
     }
 
     @Cacheable("DiscussPostRows")

@@ -15,7 +15,7 @@ public interface DiscussPostService {
      * @param limit  总页数
      * @return 帖子列表
      */
-    public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit);
+    public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit, int orderMod);
 
     //    @Cacheable
     public int findDiscussPostRows(int userId);
