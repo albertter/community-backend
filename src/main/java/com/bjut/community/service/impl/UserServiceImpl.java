@@ -45,12 +45,12 @@ public class UserServiceImpl implements CommunityConstant, UserService {
     @Override
     @Cacheable("UserById")
     public User findUserById(int id) {
-        return userMapper.selectById(id);
-//        User user = getCache(id);
-//        if (user == null) {
-//            user = initCache(id);
-//        }
-//        return user;
+//        return userMapper.selectById(id);
+        User user = getCache(id);
+        if (user == null) {
+            user = initCache(id);
+        }
+        return user;
     }
 
 

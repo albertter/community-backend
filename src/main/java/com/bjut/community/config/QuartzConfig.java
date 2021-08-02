@@ -1,6 +1,5 @@
 package com.bjut.community.config;
 
-import com.bjut.community.quartz.AlphaJob;
 import com.bjut.community.quartz.PostScoreRefreshJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -16,28 +15,6 @@ import org.springframework.scheduling.quartz.SimpleTriggerFactoryBean;
  */
 @Configuration
 public class QuartzConfig {
-//    @Bean
-    public JobDetailFactoryBean alphaJobDetail() {
-        JobDetailFactoryBean jobDetailFactoryBean = new JobDetailFactoryBean();
-        jobDetailFactoryBean.setJobClass(AlphaJob.class);
-        jobDetailFactoryBean.setName("alphaJob");
-        jobDetailFactoryBean.setGroup("alphaJobGroup");
-        jobDetailFactoryBean.setDurability(true);
-        jobDetailFactoryBean.setRequestsRecovery(true);
-        return jobDetailFactoryBean;
-    }
-
-//    @Bean
-    public SimpleTriggerFactoryBean alphaTrigger(JobDetail alphaJobDetail) {
-        SimpleTriggerFactoryBean simpleTriggerFactoryBean = new SimpleTriggerFactoryBean();
-        simpleTriggerFactoryBean.setJobDetail(alphaJobDetail);
-        simpleTriggerFactoryBean.setName("alphaTrigger");
-        simpleTriggerFactoryBean.setGroup("alphaTriggerGroup");
-        simpleTriggerFactoryBean.setRepeatCount(3000);
-        simpleTriggerFactoryBean.setJobDataMap(new JobDataMap());
-
-        return  simpleTriggerFactoryBean;
-    }
     // 刷新帖子分数任务
     @Bean
     public JobDetailFactoryBean postScoreRefreshJobDetail() {
@@ -49,6 +26,7 @@ public class QuartzConfig {
         factoryBean.setRequestsRecovery(true);
         return factoryBean;
     }
+
     @Bean
     public SimpleTriggerFactoryBean postScoreRefreshTrigger(JobDetail postScoreRefreshJobDetail) {
         SimpleTriggerFactoryBean factoryBean = new SimpleTriggerFactoryBean();

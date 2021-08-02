@@ -10,24 +10,22 @@ import com.bjut.community.util.CommunityConstant;
 import com.bjut.community.util.Result;
 import com.bjut.community.util.ResultGenerator;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.HtmlUtils;
 
 import java.util.*;
 
-@Controller
-
+@RestController
+@RequiresAuthentication
 public class MessageController implements CommunityConstant {
     @Autowired
     private MessageService messageService;
-    //    @Autowired
-//    private HostHolder hostHolder;
+
     @Autowired
     private UserServiceImpl userService;
 
@@ -124,7 +122,6 @@ public class MessageController implements CommunityConstant {
     }
 
     @RequestMapping(path = "/letter/send", method = RequestMethod.POST)
-    @ResponseBody
     public Result sendLetter(String toName, String content) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
         User target = userService.findUserByUsername(toName);
@@ -232,7 +229,7 @@ public class MessageController implements CommunityConstant {
     }
 
     @RequestMapping(path = "/notice/detail/{topic}", method = RequestMethod.GET)
-    public String geNoticerDetail(@PathVariable("topic") String topic, Model model, Page page) {
+    public Result geNoticerDetail(@PathVariable("topic") String topic, Page page) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
 
         // 分页信息
@@ -260,13 +257,12 @@ public class MessageController implements CommunityConstant {
 
             }
         }
-        model.addAttribute("notices", noticeVOList);
 
         List<Integer> ids = getLetterIds(noticeList);
         if (!ids.isEmpty()) {
             messageService.readMessage(ids);
         }
-        return "/site/notice-detail";
+        return ResultGenerator.genSuccessResult(noticeVOList);
 
     }
 }

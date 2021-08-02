@@ -56,6 +56,7 @@ public class UserController implements CommunityConstant {
 
 
     @RequestMapping(path = "/upload", method = RequestMethod.POST)
+    @RequiresAuthentication
     public Result uploadHeader(MultipartFile headerImage) {
         if (headerImage == null) {
             return ResultGenerator.genErrorResult(403, "没有选择头像");
