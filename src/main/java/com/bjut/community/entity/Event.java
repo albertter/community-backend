@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author chuzhen
+ */
 public class Event implements Serializable {
 
     private String topic;
