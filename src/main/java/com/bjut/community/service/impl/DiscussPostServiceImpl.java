@@ -3,13 +3,17 @@ package com.bjut.community.service.impl;
 import com.bjut.community.dao.DiscussPostMapper;
 import com.bjut.community.entity.DiscussPost;
 import com.bjut.community.service.DiscussPostService;
+import com.bjut.community.util.RedisKeyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 //@CacheConfig(cacheNames = "PostCache")
@@ -17,23 +21,30 @@ import java.util.List;
 public class DiscussPostServiceImpl implements DiscussPostService {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     @Autowired
+    private RedisTemplate redisTemplate;
+    @Autowired
     private DiscussPostMapper discussPostMapper;
 //    @Autowired
 //    private RedisTemplate redisTemplate;
 
-    //    @Cacheable
+    //    @Cacheable(value = "discuss", condition = "#offset<5", keyGenerator = "simpleKeyGenerator")
     @Override
-    public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit) {
-        return discussPostMapper.selectDiscussPosts(userId, offset, limit);
+    public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit, int orderMod) {
+        logger.info("进来查库了--------->{}", userId);
+        if(offset>10){
+            return discussPostMapper.selectDiscussPosts(userId, offset, limit, orderMod);
+        }
+        return discussPostMapper.selectDiscussPosts(userId, offset, limit, orderMod);
+
     }
 
-    //    @Cacheable
+    @Cacheable("DiscussPostRows")
     @Override
     public int findDiscussPostRows(int userId) {
         return discussPostMapper.selectDiscussPostRows(userId);
     }
 
-    //    @CachePut(key = "#discussPost.id")
+    @CachePut(cacheNames = "addposts", key = "#discussPost.id")
     @Override
     public int addDiscussPost(DiscussPost discussPost) {
         if (discussPost == null) {
@@ -43,7 +54,7 @@ public class DiscussPostServiceImpl implements DiscussPostService {
 
     }
 
-    //    @Cacheable
+    @Cacheable("DiscussPostById")
     @Override
     public DiscussPost findDiscussPostById(int id) {
         return discussPostMapper.selectDiscussPostById(id);
@@ -76,10 +87,10 @@ public class DiscussPostServiceImpl implements DiscussPostService {
 //        return (DiscussPost) redisTemplate.opsForValue().get(redisKey);
 //    }
 //
-//    private List<DiscussPost> initCache(int userId, int offset, int limit) {
-//        List<DiscussPost> posts = discussPostMapper.selectDiscussPosts(userId, offset, limit);
-//        String redisKey = RedisKeyUtil.getUserKey(userId);
-//        redisTemplate.opsForValue().set(redisKey, posts, 3600, TimeUnit.SECONDS);
+//    private List<DiscussPost> addCache(int userId, int offset, int limit, int orderMod) {
+//        List<DiscussPost> posts = discussPostMapper.selectDiscussPosts(userId, offset, limit, orderMod);
+//        String redisKey = RedisKeyUtil.getPostCacheKey(userId);
+//        redisTemplate.opsForZSet().set(redisKey, posts, 600, TimeUnit.SECONDS);
 //        return posts;
 //    }
 //

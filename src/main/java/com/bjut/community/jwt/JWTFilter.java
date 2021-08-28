@@ -1,7 +1,6 @@
 package com.bjut.community.jwt;
 
 import com.alibaba.fastjson.JSON;
-import com.bjut.community.util.Result;
 import com.bjut.community.util.ResultGenerator;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.slf4j.Logger;
@@ -39,13 +38,12 @@ public class JWTFilter extends BasicHttpAuthenticationFilter {
     /**
      * 登录验证
      *
-     * @param request
-     * @param response
-     * @return
-     * @throws Exception
+     * @param request request
+     * @param response response
+     * @return true
      */
     @Override
-    protected boolean executeLogin(ServletRequest request, ServletResponse response) throws Exception {
+    protected boolean executeLogin(ServletRequest request, ServletResponse response) {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         String authorization = httpServletRequest.getHeader("Authorization");
 
@@ -69,10 +67,10 @@ public class JWTFilter extends BasicHttpAuthenticationFilter {
     /**
      * 是否允许访问
      *
-     * @param request
-     * @param response
-     * @param mappedValue
-     * @return
+     * @param request request
+     * @param response response
+     * @param mappedValue m
+     * @return true
      */
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) {
@@ -115,16 +113,10 @@ public class JWTFilter extends BasicHttpAuthenticationFilter {
         httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
         httpServletResponse.setCharacterEncoding("UTF-8");
         httpServletResponse.setContentType("application/json; charset=utf-8");
-        PrintWriter out = null;
-        try {
-            out = httpServletResponse.getWriter();
+        try (PrintWriter out = httpServletResponse.getWriter()) {
             out.append(JSON.toJSONString(ResultGenerator.genFailResult(msg)));
         } catch (IOException e) {
             logger.error("返回Response信息出现IOException异常:" + e.getMessage());
-        } finally {
-            if (out != null) {
-                out.close();
-            }
         }
     }
 }

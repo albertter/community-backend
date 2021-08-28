@@ -4,6 +4,7 @@ import com.bjut.community.service.LikeService;
 import com.bjut.community.util.CommunityConstant;
 import com.bjut.community.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -50,6 +51,7 @@ public class LikeServiceImpl implements CommunityConstant, LikeService {
 
     // 统计某entity点赞数量
     @Override
+    @Cacheable
     public long findEntityLikeCount(int entityType, int entityId) {
         String entityLikeKey = RedisKeyUtil.getEntityLikeKey(entityType, entityId);
         return redisTemplate.opsForSet().size(entityLikeKey);
@@ -57,6 +59,7 @@ public class LikeServiceImpl implements CommunityConstant, LikeService {
 
     //查询用户是否对某实体是否点赞
     @Override
+
     public int findEntityLikeStatus(int userId, int entityType, int entityId) {
         String entityLikeKey = RedisKeyUtil.getEntityLikeKey(entityType, entityId);
         return redisTemplate.opsForSet().isMember(entityLikeKey, userId) ? 1 : 0;
@@ -64,6 +67,7 @@ public class LikeServiceImpl implements CommunityConstant, LikeService {
 
     //查询某用户获得的赞的数量
     @Override
+    @Cacheable
     public int findUserLikeCount(int userId) {
         String userLikeKey = RedisKeyUtil.getUserLikeKey(userId);
         Integer count = (Integer) redisTemplate.opsForValue().get(userLikeKey);

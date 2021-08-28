@@ -1,7 +1,6 @@
 package com.bjut.community.service.impl;
 
 import com.bjut.community.dao.UserMapper;
-import com.bjut.community.entity.LoginTicket;
 import com.bjut.community.entity.User;
 import com.bjut.community.service.UserService;
 import com.bjut.community.util.CommunityConstant;
@@ -11,6 +10,9 @@ import com.bjut.community.util.RedisKeyUtil;
 import com.mysql.cj.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -40,13 +42,14 @@ public class UserServiceImpl implements CommunityConstant, UserService {
     private String contextPath;
 
     @Override
+    @Cacheable("UserById")
     public User findUserById(int id) {
-        return userMapper.selectById(id);
-//        User user = getCache(id);
-//        if (user == null) {
-//            user = initCache(id);
-//        }
-//        return user;
+//        return userMapper.selectById(id);
+        User user = getCache(id);
+        if (user == null) {
+            user = initCache(id);
+        }
+        return user;
     }
 
 
@@ -117,65 +120,65 @@ public class UserServiceImpl implements CommunityConstant, UserService {
         }
     }
 
-    @Override
-    public Map<String, Object> login(String username, String password, int expiredSeconds) {
-        Map<String, Object> map = new HashMap<>();
-        if (StringUtils.isNullOrEmpty(username)) {
-            map.put("usernameMsg", "用户名不能为空");
-            return map;
-        }
-        if (StringUtils.isNullOrEmpty(password)) {
-            map.put("passwordMsg", "密码不能为空");
-            return map;
-        }
-        User user = userMapper.selectByName(username);
-        if (user == null) {
-            map.put("usernameMsg", "用户名不存在");
-            return map;
-        }
-        if (user.getStatus() == 0) {
-            map.put("usernameMsg", "账号未激活");
-            return map;
-        }
+//    @Override
+//    public Map<String, Object> login(String username, String password, int expiredSeconds) {
+//        Map<String, Object> map = new HashMap<>();
+//        if (StringUtils.isNullOrEmpty(username)) {
+//            map.put("usernameMsg", "用户名不能为空");
+//            return map;
+//        }
+//        if (StringUtils.isNullOrEmpty(password)) {
+//            map.put("passwordMsg", "密码不能为空");
+//            return map;
+//        }
+//        User user = userMapper.selectByName(username);
+//        if (user == null) {
+//            map.put("usernameMsg", "用户名不存在");
+//            return map;
+//        }
+//        if (user.getStatus() == 0) {
+//            map.put("usernameMsg", "账号未激活");
+//            return map;
+//        }
+//
+//        password = CommunityUtil.md5(password + user.getSalt());
+//        if (!user.getPassword().equals(password)) {
+//            map.put("passwordMsg", "密码不正确");
+//            return map;
+//        }
+//
+//        LoginTicket loginTicket = new LoginTicket();
+//        loginTicket.setUserId(user.getId());
+//        loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000));
+//        loginTicket.setTicket(CommunityUtil.generateUUID());
+//        loginTicket.setStatus(0);
+//
+////        loginTicketMapper.insertLoginTicket(loginTicket);
+//
+//        String redisKey = RedisKeyUtil.getTicketKey(loginTicket.getTicket());
+//        redisTemplate.opsForValue().set(redisKey, loginTicket); //字符串
+//
+//        map.put("ticket", loginTicket.getTicket());
+//
+//        return map;
+//    }
+//
+//    @Override
+//    public void logout(String ticket) {
+////        loginTicketMapper.updateStatus(ticket, 1);
+//        String redisKey = RedisKeyUtil.getTicketKey(ticket);
+//        LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(redisKey);
+//        assert loginTicket != null;
+//        loginTicket.setStatus(1);
+//        redisTemplate.opsForValue().set(redisKey, loginTicket);
+//    }
 
-        password = CommunityUtil.md5(password + user.getSalt());
-        if (!user.getPassword().equals(password)) {
-            map.put("passwordMsg", "密码不正确");
-            return map;
-        }
-
-        LoginTicket loginTicket = new LoginTicket();
-        loginTicket.setUserId(user.getId());
-        loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000));
-        loginTicket.setTicket(CommunityUtil.generateUUID());
-        loginTicket.setStatus(0);
-
-//        loginTicketMapper.insertLoginTicket(loginTicket);
-
-        String redisKey = RedisKeyUtil.getTicketKey(loginTicket.getTicket());
-        redisTemplate.opsForValue().set(redisKey, loginTicket); //字符串
-
-        map.put("ticket", loginTicket.getTicket());
-
-        return map;
-    }
-
-    @Override
-    public void logout(String ticket) {
-//        loginTicketMapper.updateStatus(ticket, 1);
-        String redisKey = RedisKeyUtil.getTicketKey(ticket);
-        LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(redisKey);
-        assert loginTicket != null;
-        loginTicket.setStatus(1);
-        redisTemplate.opsForValue().set(redisKey, loginTicket);
-    }
-
-    @Override
-    public LoginTicket findLoginTicket(String ticket) {
-//        return loginTicketMapper.selectByTicket(ticket);
-        String redisKey = RedisKeyUtil.getTicketKey(ticket);
-        return (LoginTicket) redisTemplate.opsForValue().get(redisKey);
-    }
+//    @Override
+//    public LoginTicket findLoginTicket(String ticket) {
+////        return loginTicketMapper.selectByTicket(ticket);
+//        String redisKey = RedisKeyUtil.getTicketKey(ticket);
+//        return (LoginTicket) redisTemplate.opsForValue().get(redisKey);
+//    }
 
     @Override
     public void updateHeader(int userId, String headerUrl) {
@@ -238,6 +241,15 @@ public class UserServiceImpl implements CommunityConstant, UserService {
 //        return list;
 //    }
     @Override
+    @Caching(
+            cacheable = {
+                    @Cacheable(value = "user", key = "#username")
+            },
+            put = {
+                    @CachePut(value = "user", key = "#result.id", condition = "#result != null"),
+                    @CachePut(value = "user", key = "#result.email", condition = "#result != null")
+            }
+    )
     public User findUserByName(String username) {
         return userMapper.selectByName(username);
     }

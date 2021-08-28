@@ -10,6 +10,7 @@ import com.bjut.community.util.CommunityConstant;
 import com.bjut.community.util.Result;
 import com.bjut.community.util.ResultGenerator;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +29,6 @@ public class FollowController implements CommunityConstant {
     private FollowService followService;
     @Autowired
     private UserService userService;
-
-    //    @Autowired
-//    private HostHolder hostHolder;
     @Autowired
     private EventProducer eventProducer;
 
@@ -42,6 +40,7 @@ public class FollowController implements CommunityConstant {
      * @return 消息
      */
     @RequestMapping(path = "/follow", method = RequestMethod.POST)
+    @RequiresAuthentication
     public Result follow(int entityType, int entityId) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
         //关注
@@ -67,6 +66,7 @@ public class FollowController implements CommunityConstant {
      * @return 消息
      */
     @RequestMapping(path = "/unfollow", method = RequestMethod.POST)
+    @RequiresAuthentication
     public Result unfollow(int entityType, int entityId) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
         //关注

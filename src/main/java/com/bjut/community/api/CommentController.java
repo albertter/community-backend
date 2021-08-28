@@ -12,6 +12,7 @@ import com.bjut.community.util.CommunityConstant;
 import com.bjut.community.util.Result;
 import com.bjut.community.util.ResultGenerator;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +23,7 @@ import java.util.Date;
  */
 @RestController
 @RequestMapping(path = "/comment")
-public class CommentAPI implements CommunityConstant {
+public class CommentController implements CommunityConstant {
     @Autowired
     private DiscussPostServiceImpl discussPostServiceImpl;
     @Autowired
@@ -40,6 +41,7 @@ public class CommentAPI implements CommunityConstant {
      * @return 评论成功
      */
     @RequestMapping(path = "/{discussPostId}/add", method = RequestMethod.POST)
+    @RequiresAuthentication
     public Result addComment(@PathVariable("discussPostId") int discussPostId, @RequestBody Comment comment) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
         comment.setUserId(user.getId());

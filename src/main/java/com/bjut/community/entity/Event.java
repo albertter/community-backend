@@ -1,9 +1,13 @@
 package com.bjut.community.entity;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Event {
+/**
+ * @author chuzhen
+ */
+public class Event implements Serializable {
 
     private String topic;
     private int userId;

@@ -1,18 +1,21 @@
 package com.bjut.community.service;
 
 import com.bjut.community.entity.DiscussPost;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 
 public interface DiscussPostService {
     /**
      * 分页查询帖子列表
+     *
      * @param userId 用户ID
      * @param offset 起始页
-     * @param limit 总页数
+     * @param limit  总页数
      * @return 帖子列表
      */
-    public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit);
+    public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit, int orderMod);
 
     //    @Cacheable
     public int findDiscussPostRows(int userId);

@@ -65,4 +65,8 @@ public class RedisKeyUtil {
         return PREFIX_DAU + SPLIT + startDate + SPLIT + endDate;
     }
 
+    public static String getPostCacheKey(int postId) {
+        return PREFIX_POST + SPLIT + "cache" + SPLIT + postId;
+    }
+
 }

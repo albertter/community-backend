@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bjut.community.dao.ChoiceMapper">
+    <select id="selectById" resultType="Choice">
+        select *
+        from choice
+        where id = #{id}
+    </select>
+    <insert id="save" parameterType="java.util.List">
+        insert into choice
+        (text, poll_id)
+        values
+        <foreach collection="list" item="choice" index="index" separator=",">
+            (#{choice.text},#{choice.pollId})
+        </foreach>
+    </insert>
+</mapper>

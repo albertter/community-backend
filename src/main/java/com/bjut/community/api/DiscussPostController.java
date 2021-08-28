@@ -1,15 +1,25 @@
 package com.bjut.community.api;
 
-import com.bjut.community.entity.*;
+import com.bjut.community.entity.Comment;
+import com.bjut.community.entity.DiscussPost;
+import com.bjut.community.entity.Event;
+import com.bjut.community.entity.User;
 import com.bjut.community.event.EventProducer;
+import com.bjut.community.jwt.JWTUtil;
 import com.bjut.community.service.CommentService;
 import com.bjut.community.service.DiscussPostService;
 import com.bjut.community.service.LikeService;
 import com.bjut.community.service.UserService;
-import com.bjut.community.util.*;
+import com.bjut.community.util.CommunityConstant;
+import com.bjut.community.util.RedisKeyUtil;
+import com.bjut.community.util.Result;
+import com.bjut.community.util.ResultGenerator;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +27,8 @@ import java.util.*;
 
 @RestController
 @RequestMapping(path = "/discuss")
-public class DiscussPostAPI implements CommunityConstant {
+public class DiscussPostController implements CommunityConstant {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     @Autowired
     private DiscussPostService discussPostService;
     //    @Autowired
@@ -34,10 +45,12 @@ public class DiscussPostAPI implements CommunityConstant {
     private RedisTemplate redisTemplate;
 
     @RequestMapping(path = "/add", method = RequestMethod.POST)
-    public String addDiscussPost(String title, String content) {
-        User user = (User) SecurityUtils.getSubject().getPrincipal();
+    public Result addDiscussPost(@RequestParam("title") String title, @RequestParam("content") String content) {
+        String username = JWTUtil.getUsername((String) SecurityUtils.getSubject().getPrincipal());
+        User user = userService.findUserByUsername(username);
+        System.out.println("user:" + user);
         if (user == null) {
-            return CommunityUtil.getJSONString(403, "未登录");
+            return ResultGenerator.genFailResult("未登录");
         }
         DiscussPost post = new DiscussPost();
         post.setTitle(title);
@@ -59,22 +72,25 @@ public class DiscussPostAPI implements CommunityConstant {
         String redisKey = RedisKeyUtil.getPostScoreKey();
         redisTemplate.opsForSet().add(redisKey, post.getId());
 
-        return CommunityUtil.getJSONString(0, "发布成功");
+        return ResultGenerator.genSuccessResult("发布成功");
     }
 
     /**
      * 查询帖子详情
      *
      * @param discussPostId 帖子id
-     * @param page          分页
+     * @param offset          起始页
+     * @param limit           数量
      * @return 结果
      */
     @RequestMapping(path = "/detail/{discussPostId}", method = RequestMethod.GET)
-    public Result getDiscussPost(@PathVariable("discussPostId") int discussPostId, Page page) {
+    public Result getDiscussPost(@PathVariable("discussPostId") int discussPostId,
+                                 @RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
+                                 @RequestParam(value = "limit", required = false, defaultValue = "10") int limit) {
         User loginUser = (User) SecurityUtils.getSubject().getPrincipal();
         // 帖子
         DiscussPost discussPost = discussPostService.findDiscussPostById(discussPostId);
-
+        logger.info(discussPost.getUserId() + "");
         // 作者
         User user = userService.findUserById(discussPost.getUserId());
 
@@ -85,14 +101,14 @@ public class DiscussPostAPI implements CommunityConstant {
         int likeStatus = loginUser == null ? 0 : likeService.findEntityLikeStatus(loginUser.getId(), ENTITY_TYPE_POST, discussPostId);
 
         // 评论分页信息
-        page.setLimit(5);
-        page.setPath("/discuss/detail/" + discussPostId);
-        page.setRows(discussPost.getCommentCount());
+//        page.setLimit(5);
+//        page.setPath("/discuss/detail/" + discussPostId);
+//        page.setRows(discussPost.getCommentCount());
 
         // 评论: 给帖子的评论
         // 回复: 给评论的评论
         // 评论列表
-        List<Comment> commentList = commentService.findCommentsByEntity(ENTITY_TYPE_POST, discussPost.getId(), page.getOffset(), page.getLimit());
+        List<Comment> commentList = commentService.findCommentsByEntity(ENTITY_TYPE_POST, discussPost.getId(), offset, limit);
         // 评论VO列表
         List<Map<String, Object>> commentVoList = new ArrayList<>();
         if (commentList != null) {
@@ -157,9 +173,12 @@ public class DiscussPostAPI implements CommunityConstant {
      * @return 帖子列表
      */
     @RequestMapping(path = "/posts", method = RequestMethod.GET)
+    @Cacheable(value = "discuss", condition = "#offset<5", keyGenerator = "simpleKeyGenerator")
     public Result getDiscussPostList(@RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
-                                     @RequestParam(value = "limit", required = false, defaultValue = "10") int limit) {
-        return ResultGenerator.genSuccessResult(discussPostService.findDiscussPosts(0, offset, limit));
+                                     @RequestParam(value = "limit", required = false, defaultValue = "10") int limit,
+                                     @RequestParam(value = "orderMod", required = false, defaultValue = "0") int orderMod) {
+        logger.info("getDiscussPostList " + offset + " " + limit + " " + orderMod);
+        return ResultGenerator.genSuccessResult(discussPostService.findDiscussPosts(0, offset, limit, orderMod));
     }
 
 
@@ -169,7 +188,7 @@ public class DiscussPostAPI implements CommunityConstant {
      * @param id 帖子id
      * @return 成功结果
      */
-    @RequestMapping(path = "/top", method = RequestMethod.POST)
+    @RequestMapping(path = "/top", method = RequestMethod.PUT)
     @RequiresRoles("admin")
     public Result setTop(int id) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
@@ -192,7 +211,7 @@ public class DiscussPostAPI implements CommunityConstant {
      * @param id 帖子id
      * @return 成功结果
      */
-    @RequestMapping(path = "/wonderful", method = RequestMethod.POST)
+    @RequestMapping(path = "/wonderful", method = RequestMethod.PUT)
     @RequiresRoles("admin")
     public Result setWonderful(int id) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
@@ -219,7 +238,7 @@ public class DiscussPostAPI implements CommunityConstant {
      * @param id 帖子id
      * @return 成功结果
      */
-    @RequestMapping(path = "/delete", method = RequestMethod.POST)
+    @RequestMapping(path = "/delete", method = RequestMethod.DELETE)
     @RequiresRoles("admin")
     public Result setDelete(int id) {
         User user = (User) SecurityUtils.getSubject().getPrincipal();
