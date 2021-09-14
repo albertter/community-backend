@@ -51,7 +51,6 @@ public class LikeServiceImpl implements CommunityConstant, LikeService {
 
     // 统计某entity点赞数量
     @Override
-    @Cacheable
     public long findEntityLikeCount(int entityType, int entityId) {
         String entityLikeKey = RedisKeyUtil.getEntityLikeKey(entityType, entityId);
         return redisTemplate.opsForSet().size(entityLikeKey);
